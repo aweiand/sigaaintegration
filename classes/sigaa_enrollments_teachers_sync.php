@@ -63,6 +63,8 @@
         foreach ($enrollments as $enrollment) {
             foreach ($enrollment['disciplinas'] as $course_enrollment) {
                 try {
+                    // Adiciona o nível do curso à disciplina (necessário para a lógica de validação)
+                    $course_enrollment['curso_nivel'] = $enrollment['curso_nivel'] ?? null;
                     if(sigaa_utils::validate_discipline($campus, $course_enrollment)) {
                         // generate_course_idnumber(campus $campus, $enrollment, $disciplina);
                         $course_discipline = $this->course_discipline_mapper->map_to_course_discipline($enrollment, $course_enrollment);

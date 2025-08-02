@@ -58,11 +58,20 @@ class sigaa_courses_sync extends sigaa_base_sync{
                 mtrace("idnumber: " . $course_idnumber);
                 $class_group = $course_discipline->generate_class_group($campus);
                 $period = sigaa_utils::remove_zero_in_the_period($course_discipline->period);
-                $fullname = "{$course_discipline->discipline_name} / {$course_discipline->course_name} / {$course_discipline->current_enrollment_semester}" . sigaa_utils::get_year_or_semester_suffix($course_discipline->period) . " / {$period}";
-                $shortname = "{$course_discipline->discipline_code} / 
-                            {$course_discipline->course_id} / {$class_group} / 
-                            {$course_discipline->current_enrollment_semester}" . sigaa_utils::get_year_or_semester_suffix($course_discipline->period) .
-                    " / {$course_discipline->period}";
+
+                $semester = $course_discipline->current_enrollment_semester;
+                $has_semester = isset($semester) && $semester !== '';
+                $suffix = sigaa_utils::get_year_or_semester_suffix($course_discipline->period);
+
+                // Fullname
+                $fullname = "{$course_discipline->discipline_name} / {$course_discipline->course_name}";
+                $fullname .= $has_semester ? " / {$semester}{$suffix}" : "";
+                $fullname .= " / {$period}";
+
+                // Shortname
+                $shortname = "{$course_discipline->discipline_code} / {$course_discipline->course_id} / {$class_group}";
+                $shortname .= $has_semester ? " / {$semester}{$suffix}" : "";
+                $shortname .= " / {$course_discipline->period}";
 
                 if (!$this->course_exists($course_idnumber)) {
                     $category_idnumber = $this->generate_category_level_three_id($campus, $course_discipline);
@@ -108,6 +117,10 @@ class sigaa_courses_sync extends sigaa_base_sync{
         foreach ($enrollments as $enrollment => $student) {
             // Percorrendo as disciplinas do aluno
             foreach ($student["disciplinas"] as $discipline) {
+
+                // Adiciona o nível do curso à disciplina (necessário para a lógica de validação)
+                $discipline['curso_nivel'] = $student['curso_nivel'] ?? null;
+
                 // Valida a disciplina
                 if (sigaa_utils::validate_discipline($campus, $discipline)) {
                     // Mapeia os dados da disciplina para o objeto course_discipline
@@ -138,6 +151,17 @@ class sigaa_courses_sync extends sigaa_base_sync{
     }
 
     private function generate_category_level_three_id(campus $campus, course_discipline $course_discipline) {
-        return "{$campus->id_campus}.{$course_discipline->course_id}.{$course_discipline->period}.{$course_discipline->current_enrollment_semester}";
+        $base = "{$campus->id_campus}.{$course_discipline->course_id}.{$course_discipline->period}";
+
+        if (property_exists($course_discipline, 'current_enrollment_semester') &&
+            $course_discipline->current_enrollment_semester !== null &&
+            $course_discipline->current_enrollment_semester !== '') {
+
+            return $base . '.' . $course_discipline->current_enrollment_semester;
+        }
+
+        return $base;
     }
+
+
 }

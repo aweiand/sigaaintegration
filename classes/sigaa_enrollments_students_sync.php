@@ -81,8 +81,11 @@ class sigaa_enrollments_students_sync extends sigaa_base_sync
                 mtrace(sprintf('ERRO: Usuário não encontrado. usuário: %s', $enrollment['login']));
             } else {
                 mtrace(sprintf('Processando o usuário: %s', $enrollment['login']));
+
                 foreach ($enrollment['disciplinas'] as $course_enrollment) {
                     try {
+                        // Adiciona o nível do curso à disciplina (necessário para a lógica de validação)
+                        $course_enrollment['curso_nivel'] = $enrollment['curso_nivel'] ?? null;
                         if (sigaa_utils::validate_discipline($campus, $course_enrollment)) {
                             // generate_course_idnumber(campus $campus, $enrollment, $disciplina);
                             $course_discipline = $this->course_discipline_mapper->map_to_course_discipline($enrollment, $course_enrollment);

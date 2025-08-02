@@ -43,16 +43,11 @@ class sigaa_utils {
      * @param array $disciplina Os dados da disciplina.
      * @return bool True se for válida, False caso contrário.
      */
-    public static function validate_discipline(campus $campus, array $discipline): bool {
+    public static function validate_discipline_old(campus $campus, array $discipline): bool {
 
         $sem_turma = $campus->createcourseifturmanull;
         $turma_individualizada = $campus->create_turmaindividualizada;
 
-        // Adicione estes mtraces para depuração
-        // mtrace("Valor de \$sem_turma: " . ($sem_turma ? 'true' : 'false'));
-        // mtrace("Valor de \$turma_individualizada: " . ($turma_individualizada ? 'true' : 'false'));
-
-//($discipline['semestre_oferta_cursando'] !== null && $discipline['semestre_oferta_cursando'] !== '')
         // Verifica os campos básicos da disciplina
         $discipline_valid = isset($discipline['periodo']) && isset($discipline['semestre_oferta_cursando']) &&
             ($discipline['semestre_oferta_cursando'] !== null && $discipline['semestre_oferta_cursando'] !== '');
@@ -72,5 +67,44 @@ class sigaa_utils {
 
         return $discipline_valid;
     }
+
+    public static function validate_discipline(campus $campus, array $discipline): bool {
+        $sem_turma = $campus->createcourseifturmanull;
+        $turma_individualizada = $campus->create_turmaindividualizada;
+
+        // Verifica se o nível do curso é Especialização (Lato sensu)
+        $is_lato_sensu = isset($discipline['curso_nivel']) && $discipline['curso_nivel'] === 'L';
+
+        // Validação básica: período deve existir
+        $has_periodo = isset($discipline['periodo']) && $discipline['periodo'] !== null && $discipline['periodo'] !== '';
+
+        // Para cursos de especialização, podemos aceitar semestre_oferta_cursando e turno_turma nulos
+        if ($is_lato_sensu) {
+            $discipline_valid = $has_periodo;
+        } else {
+            $discipline_valid = $has_periodo &&
+                isset($discipline['semestre_oferta_cursando']) &&
+                $discipline['semestre_oferta_cursando'] !== null &&
+                $discipline['semestre_oferta_cursando'] !== '';
+        }
+
+        // Se não permitir disciplina sem turma, então a turma deve estar definida e não ser nula
+        if (!$sem_turma) {
+            if (!isset($discipline['turma']) || $discipline['turma'] === null) {
+                return false;
+            }
+        }
+
+        // Verificar se permite a criação de disciplina para turmas individualizadas
+        if (!$turma_individualizada && isset($discipline['turma']) && $discipline['turma'] !== null) {
+            if (substr($discipline['turma'], -3) === 'IND') {
+                mtrace("Turma individualizada {$discipline['turma']}");
+                return false;
+            }
+        }
+
+        return $discipline_valid;
+    }
+
 
 }

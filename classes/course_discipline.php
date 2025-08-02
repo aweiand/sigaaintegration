@@ -76,7 +76,6 @@ class course_discipline
     }
 
     public function generate_course_idnumber(campus $campus) {
-
         $class_group = $this->generate_class_group($campus);
 
         // Verifica se a criação do class_group falhou (retorno false)
@@ -84,6 +83,13 @@ class course_discipline
             return false;
         }
 
-        return "{$campus->id_campus}.{$this->course_id}.{$this->discipline_id}.{$class_group}.{$this->period}.{$this->current_enrollment_semester}";
+        $idnumber = "{$campus->id_campus}.{$this->course_id}.{$this->discipline_id}.{$class_group}.{$this->period}";
+
+        if (isset($this->current_enrollment_semester) && $this->current_enrollment_semester !== '') {
+            $idnumber .= '.' . $this->current_enrollment_semester;
+        }
+
+        return $idnumber;
     }
+
 }
