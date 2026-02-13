@@ -81,9 +81,14 @@ class user_moodle
         return $DB->record_exists('user', ['username' => $login]);
     }
 
-    public function get_user_by_login(string $login): stdClass|false  {
+    public function get_user_by_login(?string $login): stdClass|false {
         global $DB;
-        // Verifica se o login existe no banco de dados e  retorna ele
+
+        if (empty($login)) {
+            mtrace('WARNING: get_user_by_login chamado com login vazio ou nulo.');
+            return false;
+        }
+
         return $DB->get_record('user', ['username' => $login]);
     }
 

@@ -78,7 +78,12 @@ class sigaa_enrollments_students_sync extends sigaa_base_sync
         foreach ($enrollments as $enrollment) {
             $user = $this->search_student($enrollment['login']);
             if (!$user) {
-                mtrace(sprintf('ERRO: Usuário não encontrado. usuário: %s', $enrollment['login']));
+                mtrace(sprintf(
+                    'ERRO: Usuário não encontrado. login: %s | nome: %s | matrícula: %s',
+                    $enrollment['login'] ?? 'NULL',
+                    $enrollment['nome_completo'] ?? 'NÃO INFORMADO',
+                    $enrollment['matricula'] ?? 'NÃO INFORMADA'
+                ));
             } else {
                 mtrace(sprintf('Processando o usuário: %s', $enrollment['login']));
 
@@ -117,11 +122,18 @@ class sigaa_enrollments_students_sync extends sigaa_base_sync
     /**
      * Busca estudante pelo login/CPF.
      */
-    private function search_student(string $login): object|false
+    private function search_student(?string $login): object|false
     {
         global $DB;
+
+        if (empty($login)) {
+            mtrace('WARNING: search_student chamado com login vazio ou nulo.');
+            return false;
+        }
+
         return $DB->get_record('user', ['username' => $login]);
     }
+
 
 
     /**

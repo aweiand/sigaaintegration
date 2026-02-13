@@ -82,10 +82,10 @@ class sigaa_utils {
         if ($is_lato_sensu) {
             $discipline_valid = $has_periodo;
         } else {
-            $discipline_valid = $has_periodo &&
-                isset($discipline['semestre_oferta_cursando']) &&
-                $discipline['semestre_oferta_cursando'] !== null &&
-                $discipline['semestre_oferta_cursando'] !== '';
+            $discipline_valid = $has_periodo; // &&
+            //    isset($discipline['semestre_oferta_cursando']) &&
+            //    $discipline['semestre_oferta_cursando'] !== null &&
+            //    $discipline['semestre_oferta_cursando'] !== '';
         }
 
         // Se não permitir disciplina sem turma, então a turma deve estar definida e não ser nula

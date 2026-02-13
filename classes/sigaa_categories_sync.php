@@ -27,12 +27,29 @@ class sigaa_categories_sync extends sigaa_base_sync{
         $this->sigaa_courses_manager = new sigaa_courses_manager($this->api_client);
     }
 
-    protected function get_records(campus $campus): array
+    protected function get_recordsOld(campus $campus): array
     {
         mtrace('INFO: Importando categorias...');
         $academic_period = sigaa_academic_period::buildFromParameters($this->year, $this->period);
         $enrollments = $this->api_client->get_enrollments($campus, $academic_period);
         return $this->get_all_course_discipline($campus, $enrollments);
+    }
+
+    protected function get_records(campus $campus): array
+    {
+        mtrace('INFO: Importando categorias...');
+
+        $academic_period = sigaa_academic_period::buildFromParameters($this->year, $this->period);
+
+        mtrace('Chamando API get_enrollments...');
+        $enrollments = $this->api_client->get_enrollments($campus, $academic_period);
+        mtrace('Retornou da API.');
+
+        mtrace('Processando disciplinas...');
+        $result = $this->get_all_course_discipline($campus, $enrollments);
+        mtrace('Processamento concluído.');
+
+        return $result;
     }
 
     protected function process_records(campus $campus, array $records): void
@@ -54,7 +71,7 @@ class sigaa_categories_sync extends sigaa_base_sync{
                         // Adiciona true para operar junto com a função isset
 
                         // Criação do nível 1 (curso)
-                        $idnumber_level_one = $this->generate_category_level_two_id($campus, $course_discipline);
+                        $idnumber_level_one = $this->generate_category_level_one_id($campus, $course_discipline);
                         if (!isset($this->category_level_one_created[$idnumber_level_one])) {
                             $this->create_category_level_one($campus, $course_discipline);
                             $this->category_level_one_created[$idnumber_level_one] = true;
@@ -82,7 +99,7 @@ class sigaa_categories_sync extends sigaa_base_sync{
         }
     }
 
-    private function get_all_course_discipline($campus, $enrollments): ?array {
+    private function get_all_course_disciplineOld($campus, $enrollments): ?array {
         // Inicializando um array para armazenar objetos course_discipline únicos
         $disciplines = [];
 
@@ -103,6 +120,96 @@ class sigaa_categories_sync extends sigaa_base_sync{
         return $disciplines;
 
     }
+
+    private function get_all_course_discipline($campus, $enrollments): array {
+
+        if (is_object($enrollments)) {
+            $enrollments = (array) $enrollments;
+        }
+
+        if (!is_array($enrollments)) {
+            mtrace("ERRO: enrollments não é array.");
+            return [];
+        }
+
+        $disciplines = [];
+        $studentCount = 0;
+
+        foreach ($enrollments as $student) {
+
+            $studentCount++;
+
+            if (is_object($student)) {
+                $student = (array) $student;
+            }
+
+            if (!isset($student["disciplinas"])) {
+                mtrace("----------------------------------------");
+                mtrace("Estudante #{$studentCount}");
+                mtrace("Login/Matrícula: {$student["login"]}");
+                mtrace("Curso: {$student["curso"]}");
+                mtrace("⚠ NÃO possui índice 'disciplinas'");
+                continue;
+            }
+
+            $studentDisciplines = $student["disciplinas"];
+
+            if (is_object($studentDisciplines)) {
+                $studentDisciplines = (array) $studentDisciplines;
+            }
+
+            if (!is_array($studentDisciplines)) {
+                mtrace("⚠ 'disciplinas' não é array");
+                continue;
+            }
+
+            foreach ($studentDisciplines as $discipline) {
+
+
+                if (is_object($discipline)) {
+                    $discipline = (array) $discipline;
+                }
+
+                $discipline_obj = $this->map_to_course_discipline($student, $discipline);
+                $semester = $discipline_obj->getEffectiveSemester();
+
+
+
+                //  NOVO DEBUG: curso_nivel = N e período termina em 0
+                if (
+                    ($discipline_obj->course_level ?? null) === "N" &&
+                    !str_ends_with($discipline_obj->period, "0")
+                ) {
+                    mtrace("🚨 ATENÇÃO: disciplina com curso_nivel N e período terminando em 0");
+                    mtrace("Aluno matrícula: " . ($student["matricula"] ?? 'N/A'));
+                    mtrace("Aluno login: " . ($student["login"] ?? 'N/A'));
+                    mtrace("Curso: {$discipline_obj->course_name}");
+                    mtrace("Curso nível: {$discipline_obj->course_level}");
+                    mtrace("Período: {$discipline_obj->period}");
+                    mtrace("Disciplina: " . ($discipline["disciplina"] ?? 'N/A'));
+                    mtrace("Código da disciplina: " . ($discipline["cod_disciplina"] ?? 'N/A'));
+                    mtrace("ID da disciplina: " . ($discipline["id_disciplina"] ?? 'N/A'));
+                    mtrace("Semestre retornado getEffectiveSemester(): {$semester}");
+                    mtrace("semestre_oferta_cursando: " . ($discipline["semestre_oferta_cursando"] ?? 'NULL'));
+                    mtrace("semestres_oferta: " . json_encode($discipline["semestres_oferta"] ?? []));
+                    mtrace("========================================");
+                }
+
+                if ($semester !== null) {
+                    $id = "{$campus->id_campus}.{$discipline_obj->course_id}.{$discipline_obj->period}.{$semester}";
+                    $disciplines[$id] = $discipline_obj;
+                }
+            }
+        }
+
+        mtrace("========================================");
+        mtrace("Total estudantes processados: {$studentCount}");
+        mtrace("Total disciplinas únicas: " . count($disciplines));
+        mtrace("========================================");
+
+        return $disciplines;
+    }
+
 
     private function generate_category_level_one_id(campus $campus, course_discipline $course_discipline ) {
         return "{$campus->id_campus}.{$course_discipline->course_id}";
@@ -142,11 +249,51 @@ class sigaa_categories_sync extends sigaa_base_sync{
         }
     }
 
-    private function generate_category_level_three_id(campus $campus, course_discipline $course_discipline ) {
+    private function generate_category_level_three_idOld(campus $campus, course_discipline $course_discipline ) {
         return "{$campus->id_campus}.{$course_discipline->course_id}.{$course_discipline->period}.{$course_discipline->current_enrollment_semester}";
     }
 
+    private function generate_category_level_three_id(campus $campus, course_discipline $course_discipline ) {
+
+        $semester = $course_discipline->getEffectiveSemester();
+
+        return "{$campus->id_campus}.{$course_discipline->course_id}.{$course_discipline->period}.{$semester}";
+    }
+
     private function create_category_level_three(campus $campus, course_discipline $course_discipline) {
+        global $DB;
+
+        // 🔹 ALTERAÇÃO: agora usamos o semestre efetivo (com fallback)
+        $semester = $course_discipline->getEffectiveSemester();
+
+        // Se não houver semestre válido, não cria categoria
+        if (!isset($course_discipline->period) || $semester === null) {
+            return;
+        }
+
+        $parent_idnumber = $this->generate_category_level_two_id($campus, $course_discipline);
+        $parent_category = $DB->get_record('course_categories', ['idnumber' => $parent_idnumber]);
+
+        if ($parent_category) {
+
+            // 🔹 ALTERAÇÃO: generate_category_level_three_id deve usar o semestre efetivo internamente
+            $idnumber = "{$campus->id_campus}.{$course_discipline->course_id}.{$course_discipline->period}.{$semester}";
+
+            // 🔹 ALTERAÇÃO: regra de optativa agora usa o semestre efetivo
+            if (substr($course_discipline->period, -2) !== '/0' && $semester === '0') {
+                $name = "Optativas";
+            } else {
+                // 🔹 ALTERAÇÃO: usa $semester em vez de current_enrollment_semester
+                $name = "{$semester}" . $this->get_year_or_semester_suffix($course_discipline->period);
+            }
+
+            if (!$this->category_exists($idnumber)) {
+                $this->create_category($name, $idnumber, $parent_category->id);
+            }
+        }
+    }
+
+    private function create_category_level_threeOld(campus $campus, course_discipline $course_discipline) {
         global $DB;
 
         // algumas vezes o semestre oferta disciplina está vazio
@@ -230,6 +377,7 @@ class sigaa_categories_sync extends sigaa_base_sync{
             $discipline["disciplina"],
             $discipline["cod_disciplina"],
             $discipline["id_disciplina"],
+            $discipline["semestres_oferta"],
             $discipline["semestre_oferta_cursando"],
             $discipline["periodo"],
             $discipline["situacao_matricula"],
