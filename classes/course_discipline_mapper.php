@@ -7,8 +7,9 @@ class course_discipline_mapper
      * Mapeia os dados do aluno e da disciplina para um objeto `course_discipline`.
      *
      * Regra:
-     * - Se semestre_oferta_cursando estiver vazio ou null,
+     * - Se semestre_oferta_cursando estiver vazio, null ou inválido,
      *   usa semestre_oferta (fallback).
+     * - Ignora valores como "Não Informado".
      */
     public function map_to_course_discipline(array $student, array $discipline): course_discipline
     {
@@ -26,35 +27,62 @@ class course_discipline_mapper
 
         $semester_offered = null;
 
-        if (isset($discipline["semestres_oferta"])) {
+        if (!empty($discipline["semestres_oferta"])) {
 
             if (is_array($discipline["semestres_oferta"])) {
 
                 $valid_semesters = array_filter(
                     $discipline["semestres_oferta"],
-                    fn($value) => is_numeric($value) // inclui 0
+                    function ($value) {
+
+                        if ($value === null) return false;
+
+                        $value = trim((string)$value);
+
+                        if ($value === '' || mb_strtolower($value) === 'não informado') {
+                            return false;
+                        }
+
+                        // Remove caracteres não numéricos (ex: "1º")
+                        $numeric = preg_replace('/[^0-9]/', '', $value);
+
+                        return $numeric !== '';
+                    }
                 );
 
                 if (!empty($valid_semesters)) {
-                    $semester_offered = end($valid_semesters);
+                    $last = end($valid_semesters);
+                    $semester_offered = preg_replace('/[^0-9]/', '', (string)$last);
                 }
 
             } else {
-                $semester_offered = $discipline["semestres_oferta"];
+                $value = trim((string)$discipline["semestres_oferta"]);
+
+                if ($value !== '' && mb_strtolower($value) !== 'não informado') {
+                    $semester_offered = preg_replace('/[^0-9]/', '', $value);
+                }
             }
         }
 
         // ==========================
-        // ALTERADO: Regra de fallback
+        // Trata semestre_oferta_cursando
         // ==========================
 
-        // Preserva 0 como valor válido
-        $current_enrollment_semester = (
-            isset($discipline["semestre_oferta_cursando"]) &&
-            $discipline["semestre_oferta_cursando"] !== ''
-        )
-            ? $discipline["semestre_oferta_cursando"]
-            : $semester_offered;
+        $current_enrollment_semester = null;
+
+        if (isset($discipline["semestre_oferta_cursando"])) {
+
+            $value = trim((string)$discipline["semestre_oferta_cursando"]);
+
+            if ($value !== '' && mb_strtolower($value) !== 'não informado') {
+                $current_enrollment_semester = preg_replace('/[^0-9]/', '', $value);
+            }
+        }
+
+        // Fallback final
+        if ($current_enrollment_semester === null) {
+            $current_enrollment_semester = $semester_offered;
+        }
 
         return new course_discipline(
             $course_data["course_id"],
@@ -65,8 +93,8 @@ class course_discipline_mapper
             $discipline["disciplina"] ?? null,
             $discipline["cod_disciplina"] ?? null,
             $discipline["id_disciplina"] ?? null,
-            $semester_offered, // semestre da matriz
-            $current_enrollment_semester, // ALTERADO: agora com fallback
+            $semester_offered,
+            $current_enrollment_semester,
             $discipline["periodo"] ?? null,
             $discipline["situacao_matricula"] ?? null,
             $discipline["turma"] ?? null,

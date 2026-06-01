@@ -85,6 +85,41 @@ class course_discipline
      */
     public function getEffectiveSemester(): ?string
     {
+        // 1️⃣ prioridade
+        if ($this->current_enrollment_semester !== null) {
+            $value = trim((string)$this->current_enrollment_semester);
+            if ($value !== '') {
+                return $value;
+            }
+        }
+
+        // 2️⃣ fallback seguro para array
+        if (is_array($this->semester_offered)) {
+            foreach ($this->semester_offered as $value) {
+                $value = trim((string)$value);
+
+                if ($value !== '' && is_numeric($value)) {
+                    return $value; // pega o primeiro válido
+                }
+            }
+        }
+
+        // 3️⃣ fallback para string
+        if (!is_array($this->semester_offered) &&
+            $this->semester_offered !== null) {
+
+            $value = trim((string)$this->semester_offered);
+
+            if ($value !== '' && is_numeric($value)) {
+                return $value;
+            }
+        }
+
+        return null;
+    }
+
+    public function getEffectiveSemesterOld(): ?string
+    {
         // 1️⃣ prioridade: semestre que está cursando
         if ($this->current_enrollment_semester !== null &&
             trim((string)$this->current_enrollment_semester) !== '') {
