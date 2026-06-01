@@ -76,7 +76,7 @@ class sigaa_enrollments_students_sync extends sigaa_base_sync
     private function enroll_student_into_courses(campus $campus, array $enrollments): void
     {
         foreach ($enrollments as $enrollment) {
-            // DTI OSÓRIO -- ALTERAMOS POIS NOSSO LDAP USA MATRÍCULA COMO LOGIN
+            // ALTERAMOS A BUSCA PARA MATRÍCULA POIS USAMOS ESSE CAMPO NO LDAP
             $user = $this->search_student($enrollment['matricula']);
             if (!$user) {
                 mtrace(sprintf(

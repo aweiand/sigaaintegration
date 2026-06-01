@@ -14,20 +14,38 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+
 /**
- * Version metadata for the local_sigaaintegration plugin.
+ * A scheduled task.
  *
  * @package   local_sigaaintegration
- * @copyright Year, You Name <your@email.address>
+ * @copyright 2024, Igor Ferreira Cemim
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+namespace local_sigaaintegration\task;
 
-defined('MOODLE_INTERNAL') || die();
+use core\task\adhoc_task;
+use local_sigaaintegration\sigaa_courses_sync;
 
-$plugin->version = 2026060101; //YYYYMMDDXX
-$plugin->requires = 2023100400;
-$plugin->component = 'local_sigaaintegration';
-$plugin->maturity = MATURITY_STABLE;
-$plugin->release = 'v1.0.10';
+class import_courses_adhoc_task extends adhoc_task {
 
-$plugin->dependencies = [];
+    /**
+     * Get a descriptive name for this task (shown to admins).
+     *
+     * @return string
+     */
+    public function get_name() {
+        return get_string('importcourses', 'local_sigaaintegration');
+    }
+
+    public function retry_until_success(): bool {
+        return false;
+    }
+
+    public function execute() {
+        $parameters = $this->get_custom_data();
+        $coursessync = new sigaa_courses_sync($parameters->ano, $parameters->periodo);
+        $coursessync->sync();
+    }
+
+}

@@ -65,7 +65,7 @@ $tasks = [
         'minute' => 'R',
     ],
 
-    /// DTI OSÓRIO -- COMO USAMOS O LDAP PARA CREDENCIAIS, DESLIGAMOS ESSA TASK
+    /// COMO USAMOS O LDAP PARA CREDENCIAIS, DESLIGAMOS ESSA TASK
     // [
     //     'classname' => 'local_sigaaintegration\task\import_teachers_task',
 
@@ -86,9 +86,9 @@ $tasks = [
     //     // At a random minute
     //     'minute' => 'R',
     // ],
-    /// DTI OSÓRIO -- FIM
+    /// COMO USAMOS O LDAP PARA CREDENCIAIS, DESLIGAMOS ESSA TASK
 
-    /// DTI OSÓRIO -- COMO NÃO TEMOS O EMAIL, DESLIGAMOS POR ENQUANTO
+    /// COMO NÃO TEMOS O EMAIL, DESLIGAMOS POR ENQUANTO
     // [
     //     'classname' => 'local_sigaaintegration\task\import_enrollments_teachers_task',
 
@@ -109,9 +109,9 @@ $tasks = [
     //     // At a random minute
     //     'minute' => 'R',
     // ],
-    /// DTI OSÓRIO -- FIM
+    /// COMO NÃO TEMOS O EMAIL, DESLIGAMOS POR ENQUANTO
 
-    /// DTI OSÓRIO -- COMO USAMOS O LDAP PARA CREDENCIAIS, DESLIGAMOS ESSA TASK
+    /// COMO USAMOS O LDAP PARA CREDENCIAIS, DESLIGAMOS ESSA TASK
     // [
     //     'classname' => 'local_sigaaintegration\task\import_students_task',
 
@@ -132,7 +132,7 @@ $tasks = [
     //     // At a random minute
     //     'minute' => 'R',
     // ],
-    /// DTI OSÓRIO -- FIM
+    /// COMO USAMOS O LDAP PARA CREDENCIAIS, DESLIGAMOS ESSA TASK
 
     [
         'classname' => 'local_sigaaintegration\task\import_enrollments_students_task',

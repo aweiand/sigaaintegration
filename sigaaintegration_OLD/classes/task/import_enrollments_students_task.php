@@ -14,20 +14,35 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+
 /**
- * Version metadata for the local_sigaaintegration plugin.
+ * A scheduled task.
  *
  * @package   local_sigaaintegration
- * @copyright Year, You Name <your@email.address>
+ * @copyright 2024, Igor Ferreira Cemim
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+namespace local_sigaaintegration\task;
 
-defined('MOODLE_INTERNAL') || die();
+use core\task\scheduled_task;
+use local_sigaaintegration\sigaa_enrollments_students_sync;
+use local_sigaaintegration\sigaa_academic_period;
 
-$plugin->version = 2026060101; //YYYYMMDDXX
-$plugin->requires = 2023100400;
-$plugin->component = 'local_sigaaintegration';
-$plugin->maturity = MATURITY_STABLE;
-$plugin->release = 'v1.0.10';
+class import_enrollments_students_task extends scheduled_task {
 
-$plugin->dependencies = [];
+    /**
+     * Get a descriptive name for this task (shown to admins).
+     *
+     * @return string
+     */
+    public function get_name() {
+        return get_string('importenrollments', 'local_sigaaintegration');
+    }
+
+    public function execute() {
+        $period = sigaa_academic_period::getAcademicPeriod();
+        $enrollmentssync = new sigaa_enrollments_students_sync($period->getAno(), $period->getPeriodo());
+        $enrollmentssync->sync();
+    }
+
+}
