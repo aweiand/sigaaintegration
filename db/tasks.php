@@ -89,26 +89,26 @@ $tasks = [
     /// DTI OSÓRIO -- FIM
 
     /// DTI OSÓRIO -- COMO NÃO TEMOS O EMAIL, DESLIGAMOS POR ENQUANTO
-    // [
-    //     'classname' => 'local_sigaaintegration\task\import_enrollments_teachers_task',
+    [
+        'classname' => 'local_sigaaintegration\task\import_enrollments_teachers_task',
 
-    //     'blocking' => 0,
+        'blocking' => 0,
 
-    //     // Every month.
-    //     'month' => '*',
+        // Every month.
+        'month' => '*',
 
-    //     // Every day.
-    //     'day' => '*',
+        // Every day.
+        'day' => '*',
 
-    //     // Every day of week.
-    //     'dayofweek' => '*',
+        // Every day of week.
+        'dayofweek' => '*',
 
-    //     // At 4am
-    //     'hour' => '4',
+        // At 4am
+        'hour' => '4',
 
-    //     // At a random minute
-    //     'minute' => 'R',
-    // ],
+        // At a random minute
+        'minute' => 'R',
+    ],
     /// DTI OSÓRIO -- FIM
 
     /// DTI OSÓRIO -- COMO USAMOS O LDAP PARA CREDENCIAIS, DESLIGAMOS ESSA TASK

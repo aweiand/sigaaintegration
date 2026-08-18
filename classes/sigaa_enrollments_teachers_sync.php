@@ -72,23 +72,48 @@
                         if($courseidnumber){
                             foreach ($course_enrollment['docentes'] as $teacher)
                             {
-                                // Converter o CPF para string
-                                $cpf_docente_str = strval($teacher['cpf_docente']);
-                                // Garantir que o CPF tenha 11 dígitos, completando com zeros à esquerda, se necessário
-                                $cpf_docente_str = str_pad($cpf_docente_str, 11, "0", STR_PAD_LEFT);
-                                if (in_array($cpf_docente_str, $this->teachersNotFound)) {
-                                    mtrace(sprintf('INFO: Usuário previamente registrado como não encontrado. usuário: %s', $cpf_docente_str));
+                                $docente_mail = $teacher['email_docente'] ?? null;
+                                if ($docente_mail === null) {
+                                    mtrace(sprintf(
+                                        'ERRO: Email do docente não encontrado. Docente: %s , disciplina: %s , cod_disciplina: %s',
+                                        $teacher['docente'] ?? 'Desconhecido',
+                                        $course_enrollment['disciplina'] ?? 'Desconhecido',
+                                        $course_enrollment['cod_disciplina'] ?? 'Desconhecido'
+                                    ));
+                                    continue;
+                                } else if (!str_contains($docente_mail, "@osorio.ifrs.edu.br")) {
+                                    mtrace(sprintf(
+                                        'ERRO: Email do docente inválido. Docente: %s, email: %s, disciplina: %s , cod_disciplina: %s ',
+                                        $teacher['docente'] ?? 'Desconhecido',
+                                        $docente_mail,
+                                        $course_enrollment['disciplina'] ?? 'Desconhecido',
+                                        $course_enrollment['cod_disciplina'] ?? 'Desconhecido'
+                                    ));
                                     continue;
                                 }
 
+                                $docente_mail = explode('@', $docente_mail)[0]; // Remove o domínio do email, mantendo apenas o login
+
+                                // Converter o CPF para string
+                                // $cpf_docente_str = strval($teacher['cpf_docente']);
+                                // // Garantir que o CPF tenha 11 dígitos, completando com zeros à esquerda, se necessário
+                                // $cpf_docente_str = str_pad($cpf_docente_str, 11, "0", STR_PAD_LEFT);
+                                // if (in_array($cpf_docente_str, $this->teachersNotFound)) {
+                                //     mtrace(sprintf('INFO: Usuário previamente registrado como não encontrado. usuário: %s', $cpf_docente_str));
+                                //     continue;
+                                // }
+
                                 // Buscar o usuário no banco
-                                $user = $this->search_teacher($cpf_docente_str);
+                                // $user = $this->search_teacher($cpf_docente_str);
+                                $user = $this->search_teacher($docente_mail);
                                 if (!$user) {
                                     // Adicionar o CPF ao array de usuários não encontrados
-                                    $this->teachersNotFound[] = $cpf_docente_str;
-                                    mtrace(sprintf('ERRO: Usuário não encontrado. usuário: %s', $cpf_docente_str));
+                                    // $this->teachersNotFound[] = $cpf_docente_str;
+                                    // mtrace(sprintf('ERRO: Usuário não encontrado. usuário: %s', $cpf_docente_str));
+                                    $this->teachersNotFound[] = ($docente_mail ?? $teacher['docente']);
+                                    mtrace(sprintf('ERRO: Usuário não encontrado. usuário: %s , docente: %s', $docente_mail, $teacher['docente']));
                                 } else {
-                                    $this->enroll_teacher_into_single_course($user, $courseidnumber);
+                                    $this->enroll_teacher_into_single_course($user, $courseidnumber, $course_enrollment['disciplina'] ?? 'Desconhecido');
                                 }
                             }
                         } else {
@@ -98,10 +123,11 @@
                 } catch (Exception $e) {
                     mtrace(sprintf(
                         'ERRO: Falha ao processar inscrição de professor em uma disciplina. ' .
-                        'matrícula: %s, usuário: %s, disciplina: %s, erro: %s',
+                        'matrícula: %s, usuário: %s, disciplina: %s, cod_disciplina: %s, erro: %s',
                         $enrollment['matricula'],
                         $user->username,
-                        $courseidnumber,
+                        $course_enrollment['disciplina'] ?? 'Desconhecido',
+                        $course_enrollment['cod_disciplina'] ?? 'Desconhecido',
                         $e->getMessage()
                     ));
                 }
@@ -183,14 +209,14 @@
     /**
      * Tenta increver o professor em uma determinada disciplina retornada pela API do SIGAA.
      */
-    private function enroll_teacher_into_single_course(object $user, string $course_idnumber) :void
+    private function enroll_teacher_into_single_course(object $user, string $course_idnumber, string $course_name) :void
     {
         $course = $this->search_course($course_idnumber);
         if (!$course) {
             mtrace(sprintf(
                 'ERRO: Disciplina não encontrada. Inscrição não realizada. usuário: %s, disciplina: %s',
                 $user->username,
-                $course_idnumber
+                $course_name
             ));
             return;
         }
