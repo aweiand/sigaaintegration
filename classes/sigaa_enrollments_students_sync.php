@@ -86,7 +86,7 @@ class sigaa_enrollments_students_sync extends sigaa_base_sync
                     $enrollment['matricula'] ?? 'NÃO INFORMADA'
                 ));
             } else {
-                mtrace(sprintf('Processando o usuário: %s', $enrollment['login']));
+                // mtrace(sprintf('Processando o usuário: %s', $enrollment['login']));
 
                 foreach ($enrollment['disciplinas'] as $course_enrollment) {
                     try {
@@ -103,8 +103,8 @@ class sigaa_enrollments_students_sync extends sigaa_base_sync
                                 mtraca("ERRO na geração do idnumber da disciplina");
                             }
                         } else {
-                            mtrace('Disciplina não validada:');
-                            mtrace(print_r($course_enrollment, true));
+                            // mtrace('Disciplina não validada:');
+                            // mtrace(print_r($course_enrollment, true));
                         }
                     } catch (Exception $e) {
                         mtrace(sprintf(
@@ -192,11 +192,11 @@ class sigaa_enrollments_students_sync extends sigaa_base_sync
 
         $manualenrol = enrol_get_plugin('manual');
         $manualenrol->enrol_user($manualenrolinstance, $user->id, $this->studentroleid);
-        mtrace(sprintf(
-            "INFO: O estudante foi inscrito na disciplina com sucesso. usuário: %s, disciplina: %s",
-            $user->username,
-            $course->idnumber
-        ));
+        // mtrace(sprintf(
+        //     "INFO: O estudante foi inscrito na disciplina com sucesso. usuário: %s, disciplina: %s",
+        //     $user->username,
+        //     $course->idnumber
+        // ));
     }
 
     /**
@@ -206,11 +206,11 @@ class sigaa_enrollments_students_sync extends sigaa_base_sync
     {
         $course = $this->search_course($courseidnumber);
         if (!$course) {
-            mtrace(sprintf(
-                'ERRO: Disciplina não encontrada. Inscrição não realizada. usuário: %s, disciplina: %s',
-                $user->username,
-                $courseidnumber
-            ));
+            // mtrace(sprintf(
+            //     'ERRO: Disciplina não encontrada. Inscrição não realizada. usuário: %s, disciplina: %s',
+            //     $user->username,
+            //     $courseidnumber
+            // ));
             return;
         }
 

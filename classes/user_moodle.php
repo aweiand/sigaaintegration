@@ -24,7 +24,7 @@ class user_moodle
                 $user->lastname = $this->get_last_name($record['nome_completo']);
                 $user->email = $record['email'];
                 $user->password = hash_internal_user_password($this->generate_strong_password());
-                $user->auth = 'manual';
+                $user->auth = $record['auth'] ?? 'manual';
                 $user->confirmed = 1;
                 $user->mnethostid = $CFG->mnet_localhost_id;
 
