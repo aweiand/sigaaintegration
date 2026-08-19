@@ -38,8 +38,8 @@ $tasks = [
         // Every day of week.
         'dayofweek' => '*',
 
-        // At 4am
-        'hour' => '4',
+        // At 2am
+        'hour' => '2',
 
         // At a random minute
         'minute' => 'R',
@@ -58,8 +58,8 @@ $tasks = [
         // Every day of week.
         'dayofweek' => '*',
 
-        // At 4am
-        'hour' => '4',
+        // At 3am
+        'hour' => '3',
 
         // At a random minute
         'minute' => 'R',
@@ -88,7 +88,6 @@ $tasks = [
     // ],
     /// DTI OSÓRIO -- FIM
 
-    /// DTI OSÓRIO -- COMO NÃO TEMOS O EMAIL, DESLIGAMOS POR ENQUANTO
     [
         'classname' => 'local_sigaaintegration\task\import_enrollments_teachers_task',
 
@@ -109,9 +108,7 @@ $tasks = [
         // At a random minute
         'minute' => 'R',
     ],
-    /// DTI OSÓRIO -- FIM
 
-    /// DTI OSÓRIO -- COMO USAMOS O LDAP PARA CREDENCIAIS, DESLIGAMOS ESSA TASK
     [
         'classname' => 'local_sigaaintegration\task\import_students_task',
 
@@ -132,7 +129,6 @@ $tasks = [
         // At a random minute
         'minute' => 'R',
     ],
-    /// DTI OSÓRIO -- FIM
 
     [
         'classname' => 'local_sigaaintegration\task\import_enrollments_students_task',
@@ -148,8 +144,8 @@ $tasks = [
         // Every day of week.
         'dayofweek' => '*',
 
-        // At 4am
-        'hour' => '4',
+        // At 5am
+        'hour' => '5',
 
         // At a random minute
         'minute' => 'R',
