@@ -61,7 +61,7 @@ class sigaa_students_sync extends sigaa_base_sync
         // Processa o usuário somente se o curso existir no banco de dados do Moodle.
         if($this->course_exists_in_moodle($campus, $enrollment)){
             $enrollment['login'] = $enrollment['matricula'];
-            $enrollment['email'] = $enrollment['matricula'] . '@osorio.ifrs.edu.br';
+            $enrollment['email'] = $enrollment['matricula'] . '@aluno.osorio.ifrs.edu.br';
             $enrollment['auth'] = 'ldap2';
 
             $current_user = $this->user_moodle->get_user_by_login($enrollment['login']);
